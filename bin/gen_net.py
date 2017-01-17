@@ -86,7 +86,7 @@ class GenNet:
             inputs = tf.pad(inputs, [[0, 0], [40, 40], [40, 40], [0, 0]], "CONSTANT")
 
         filter_maps = tf.nn.conv2d(inputs, filters, [1, stride, stride, 1], padding=padding)
-        bn_filter_maps = self.batch_normalize(filter_maps, maps_shape[3])
+        bn_filter_maps = self.instance_normalize(filter_maps)
         return bn_filter_maps
 
     #
@@ -108,7 +108,7 @@ class GenNet:
 
         #
         activations = tf.nn.conv2d_transpose(inputs, filters, output_shape=out_shape, padding=pad_conv, strides=stride)
-        bn_activations = self.batch_normalize(activations, num_output_filters)
+        bn_activations = self.instance_normalize(activations)
 
         return tf.nn.relu(bn_activations)
 
@@ -131,6 +131,13 @@ class GenNet:
                 prev_out = self.deconv_block(prev_out, layer)
 
         return prev_out
+
+    # Instance normalize inputs to reduce covariate shift and reduce dependency on input contrast to improve results
+    def instance_normalize(self, input):
+        # Mean and variances related to our instance
+        mean, var = tf.nn.moments(input, [1, 2], keep_dims=True)
+        normed_inputs = (input - mean) / (tf.sqrt(var) + epsilon)
+        return normed_inputs
 
     # The residual blocks is comprised of two convolutional layers and aims to add long short-term memory to the network
     def residual_block(self, inputs, layer):
