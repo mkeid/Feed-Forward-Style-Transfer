@@ -70,13 +70,6 @@ class Styler:
             print("Training data could not be found.")
             ask_to_download()
 
-    def load_examples(self, training_img):
-        coord = tf.train.Coordinator()
-        threads = tf.train.start_queue_runners(coord=coord)
-        self.examples.append(self.session.run([training_img])[0] / 255.)
-        coord.request_stop()
-        coord.join(threads)
-
     # Returns a numpy array of an image specified by its path
     def load_img(self, path):
         # Load image [height, width, depth]
@@ -194,27 +187,27 @@ class Styler:
             optimizer = tf.train.AdamOptimizer(learning_rate)
             trainable_vars = tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, scope="generator")
             grads = optimizer.compute_gradients(total_loss, trainable_vars)
-            grads = [(tf.clip_by_value(grad, -100., 100.), var) for grad, var in grads]
             update_weights = optimizer.apply_gradients(grads)
 
         # Populate the training data
         print("Initializing session and loading training images..")
-        training_img = self.next_example(height=art_shape[1], width=art_shape[2])
+        example = self.next_example(height=art_shape[1], width=art_shape[2])
         self.session.run(tf.initialize_all_variables())
-        self.load_examples(training_img)
 
         print("Begining training..")
+        coord = tf.train.Coordinator()
+        threads = tf.train.start_queue_runners(coord=coord)
         start_time = time.time()
 
         for i in range(epochs):
             self.net.is_training = True
 
             # Get next training image from batch and reshape it to include a batch size of 1
-            train_img = self.examples[i % len(self.examples)]
-            train_img = train_img.reshape([1] + list(train_img.shape)).astype(np.float32)
+            training_img = self.session.run(example) / 255.
+            training_img = training_img.reshape([1] + list(training_img.shape)).astype(np.float32)
 
             # Initialize new feed dict for the training iteration and invoke the update op
-            feed_dict = {variable_placeholder: train_img, content_placeholder: train_img}
+            feed_dict = {variable_placeholder: training_img, content_placeholder: training_img}
             _, loss = self.session.run([update_weights, total_loss], feed_dict=feed_dict)
 
             if self.print_training_status and i % self.train_n == 0:
@@ -228,6 +221,8 @@ class Styler:
         # Alert that training has been completed and print the run time
         elapsed = time.time() - start_time
         print("Training complete. The session took %.2f seconds to complete." % elapsed)
+        coord.request_stop()
+        coord.join(threads)
 
         # Save the weights with the name of the references style so that the net may stylize future images
         print("Proceeding to save weights..")
