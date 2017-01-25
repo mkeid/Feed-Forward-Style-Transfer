@@ -25,8 +25,10 @@ class Styler:
             'training_url': 'http://msvocds.blob.core.windows.net/coco2014/train2014.zip'
         }
         self.session = session
-        self.train_height = 256
-        self.train_width = 256
+        self.train_height = 400
+        self.train_width = 400
+        self.print_training_status = True
+        self.train_n = 100
 
     # Checks for training data to see if it's missing or not. Asks to download if missing.
     def check_for_examples(self):
@@ -151,7 +153,8 @@ class Styler:
 
         # Generator Network ops
         variable_placeholder = tf.placeholder(dtype=tf.float32, shape=art_shape)
-        variable_img = self.net.forward_pass(variable_placeholder)
+        self.net.build(variable_placeholder)
+        variable_img = self.net.output
 
         # VGG Network ops
         with tf.name_scope('vgg_style'):
@@ -191,8 +194,8 @@ class Styler:
             optimizer = tf.train.AdamOptimizer(learning_rate)
             trainable_vars = tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, scope="generator")
             grads = optimizer.compute_gradients(total_loss, trainable_vars)
-            clipped_grads = [(tf.clip_by_value(grad, -1., 1.), var) for grad, var in grads]
-            update_weights = optimizer.apply_gradients(clipped_grads)
+            grads = [(tf.clip_by_value(grad, -100., 100.), var) for grad, var in grads]
+            update_weights = optimizer.apply_gradients(grads)
 
         # Populate the training data
         print("Initializing session and loading training images..")
@@ -210,18 +213,17 @@ class Styler:
             train_img = self.examples[i % len(self.examples)]
             train_img = train_img.reshape([1] + list(train_img.shape)).astype(np.float32)
 
+            # Initialize new feed dict for the training iteration and invoke the update op
             feed_dict = {variable_placeholder: train_img, content_placeholder: train_img}
-            if i % 100 == 0:
-                print("Epoch %06d | Loss %.05f" % (i, self.session.run(total_loss, feed_dict=feed_dict)))
+            _, loss = self.session.run([update_weights, total_loss], feed_dict=feed_dict)
+
+            if self.print_training_status and i % self.train_n == 0:
+                print("Epoch %06d | Loss %.06f" % (i, loss))
                 in_path = self.current_path + '/../nyc.jpg'
                 input_img, input_shape = self.load_img_to(in_path, height=self.train_height, width=self.train_width)
                 input_img = input_img.reshape([1] + input_shape).astype(np.float32)
-                self.net.is_training = False
                 path_out = self.current_path + '/../output/' + str(start_time) + '.jpg'
                 self.render(variable_img, feed_dict={variable_placeholder: input_img}, path_out=path_out)
-                self.net.is_training = True
-
-            self.session.run(update_weights, feed_dict=feed_dict)
 
         # Alert that training has been completed and print the run time
         elapsed = time.time() - start_time
@@ -230,5 +232,6 @@ class Styler:
         # Save the weights with the name of the references style so that the net may stylize future images
         print("Proceeding to save weights..")
         name = os.path.basename(self.paths['style_file']).replace('.jpg', '')
+        os.makedirs(self.paths['trained_generators_dir'] + name)
         saver = tf.train.Saver(trainable_vars)
         saver.save(self.session, self.paths['trained_generators_dir'] + name)

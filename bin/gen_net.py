@@ -5,50 +5,40 @@ import tensorflow as tf
 
 # Model hyperparameters
 decay = .9
-epsilon = 1e-3
+epsilon = 1e-8
 pad_conv = 'SAME'
-pad_residual = 'VALID'
-
-# Generator net architecture reference
-layers = [
-    {'kind': 'reflection',  'padding_size': 40},
-    {'kind': 'conv',        'filters_shape': [9, 9, 3, 32],     'stride': 1},
-    {'kind': 'conv',        'filters_shape': [3, 3, 32, 64],    'stride': 2},
-    {'kind': 'conv',        'filters_shape': [3, 3, 64, 128],   'stride': 2},
-
-    {'kind': 'residual',    'filters_shape': [3, 3, 128, 128],  'stride': 1},
-    {'kind': 'residual',    'filters_shape': [3, 3, 128, 128],  'stride': 1},
-    {'kind': 'residual',    'filters_shape': [3, 3, 128, 128],  'stride': 1},
-    {'kind': 'residual',    'filters_shape': [3, 3, 128, 128],  'stride': 1},
-    {'kind': 'residual',    'filters_shape': [3, 3, 128, 128],  'stride': 1},
-
-    {'kind': 'deconv',      'filters_shape': [3, 3, 64, 128],   'stride': 2},
-    {'kind': 'deconv',      'filters_shape': [3, 3, 32, 64],    'stride': 2},
-
-    {'kind': 'output',      'filters_shape': [9, 9, 32, 3],     'stride': 1},
-]
+pad_resid = 'VALID'
 
 
 class GenNet:
     def __init__(self, weights_path=None):
-        self.layers = layers
-
         if weights_path is not None:
             self.load_net(weights_path)
             self.training = False
         else:
             self.training = True
 
+    #
     @staticmethod
     def get_weights(shape):
-        return tf.Variable(tf.truncated_normal(shape, mean=0., stddev=.1))
+        return tf.Variable(tf.truncated_normal(shape, mean=0., stddev=.1), name='weights')
 
+    # Instance normalize inputs to reduce covariate shift and reduce dependency on input contrast to improve results
+    @staticmethod
+    def instance_normalize(inputs):
+        # Mean and variances related to our instance
+        mean, var = tf.nn.moments(inputs, [1, 2], keep_dims=True)
+        normed_inputs = (inputs - mean) / (tf.sqrt(var) + epsilon)
+        return normed_inputs
+
+    #
     @staticmethod
     def pad(inputs, size):
         return tf.pad(inputs, [[0, 0], [size, size], [size, size], [0, 0]], "REFLECT")
 
     # Batch normalize inputs to reduce covariate shift and improve the efficiency of training
-    def batch_normalize(self, inputs, num_maps):
+    @staticmethod
+    def batch_normalize(inputs, num_maps, is_training):
         with tf.variable_scope("batch_normalization"):
             # Trainable variables for scaling and offsetting our inputs
             scale = tf.Variable(tf.ones([num_maps], dtype=tf.float32), name='gamma')
@@ -72,90 +62,93 @@ class GenNet:
                     return tf.identity(batch_mean), tf.identity(batch_var)
 
             # Retrieve the means and variances and apply the BN transformation
-            mean, var = tf.cond(tf.equal(self.training, True), ema_update, ema_retrieve)
+            mean, var = tf.cond(tf.equal(is_training, True), ema_update, ema_retrieve)
             bn_inputs = tf.nn.batch_normalization(inputs, mean, var, offset, scale, epsilon)
 
         return bn_inputs
 
     # Convolve inputs and return their batch normalized tensor
-    def conv_block(self, inputs, maps_shape, padding, stride, pad=False):
-        filters = self.get_weights(maps_shape)
+    def conv_block(self, inputs, maps_shape, padding, stride, name):
+        with tf.variable_scope(name):
+            filters = self.get_weights(maps_shape)
+            filter_maps = tf.nn.conv2d(inputs, filters, [1, stride, stride, 1], padding=padding)
+            num_out_maps = maps_shape[3]
+            bias = tf.Variable(tf.constant(0., shape=[num_out_maps]))
+            bias_activations = tf.nn.bias_add(filter_maps, bias)
 
-        # Reflection pad the input so the dimensions of the final generated image is consistent
-        if pad:
-            inputs = tf.pad(inputs, [[0, 0], [40, 40], [40, 40], [0, 0]], "CONSTANT")
-
-        filter_maps = tf.nn.conv2d(inputs, filters, [1, stride, stride, 1], padding=padding)
-        bn_filter_maps = self.instance_normalize(filter_maps)
-        return bn_filter_maps
+            if name != 'output':
+                bias_activations = self.instance_normalize(bias_activations)
+                return tf.nn.relu(bias_activations)
+            else:
+                return tf.nn.sigmoid(bias_activations)
 
     #
-    def deconv_block(self, inputs, layer):
-        filters = self.get_weights(layer['filters_shape'])
+    def deconv_block(self, inputs, maps_shape, stride, name):
+        with tf.variable_scope(name):
+            filters = self.get_weights(maps_shape)
 
-        #
-        inputs_shape = inputs.get_shape().as_list()
-        inputs_batch_size = inputs_shape[0]
-        inputs_height = inputs_shape[1]
-        inputs_width = inputs_shape[2]
+            #
+            inputs_shape = inputs.get_shape().as_list()
+            inputs_height = inputs_shape[1]
+            inputs_width = inputs_shape[2]
 
-        #
-        dim_height = inputs_height * layer['stride']
-        dim_width = inputs_width * layer['stride']
-        num_output_filters = layer['filters_shape'][2]
-        out_shape = tf.pack([inputs_batch_size, dim_height, dim_width, num_output_filters])
-        stride = [1, layer['stride'], layer['stride'], 1]
+            #
+            dim_height = inputs_height * stride
+            dim_width = inputs_width * stride
+            dim_out = maps_shape[2]
+            out_shape = tf.pack([1, dim_height, dim_width, dim_out])
+            stride = [1, stride, stride, 1]
 
-        #
-        activations = tf.nn.conv2d_transpose(inputs, filters, output_shape=out_shape, padding=pad_conv, strides=stride)
-        bn_activations = self.instance_normalize(activations)
+            #
+            activations = tf.nn.conv2d_transpose(inputs, filters, output_shape=out_shape, padding=pad_conv, strides=stride)
+            bias = tf.Variable(tf.constant(0., shape=[dim_out]), name="biases")
+            bias_activations = tf.nn.bias_add(activations, bias)
+            bn_activations = self.instance_normalize(bias_activations)
 
-        return tf.nn.relu(bn_activations)
+            return tf.nn.relu(bn_activations)
 
-    # Run forward propagation and return the computed image
-    def forward_pass(self, img):
-        prev_out = img
+    #
+    def build(self, img):
+        self.padded = self.pad(img, 40)
 
-        for layer in self.layers:
-            if layer['kind'] == 'conv' or layer['kind'] == 'output':
-                conv = self.conv_block(prev_out, layer['filters_shape'], padding=pad_conv, stride=layer['stride'])
-                if layer['kind'] == 'output':
-                    prev_out = tf.nn.sigmoid(conv)
-                else:
-                    prev_out = tf.nn.relu(conv)
-            elif layer['kind'] == 'reflection':
-                prev_out = GenNet.pad(prev_out, layer['padding_size'])
-            elif layer['kind'] == 'residual':
-                prev_out = self.residual_block(prev_out, layer)
-            elif layer['kind'] == 'deconv':
-                prev_out = self.deconv_block(prev_out, layer)
+        self.conv1 = self.conv_block(self.padded, maps_shape=[9, 9, 3, 32], padding=pad_conv, stride=1, name='conv1')
+        self.conv2 = self.conv_block(self.conv1, maps_shape=[3, 3, 32, 64], padding=pad_conv, stride=2, name='conv2')
+        self.conv3 = self.conv_block(self.conv2, maps_shape=[3, 3, 64, 128], padding=pad_conv, stride=2, name='conv3')
 
-        return prev_out
+        self.resid1 = self.residual_block(self.conv3, maps_shape=[3, 3, 128, 128], stride=1, name='resid1')
+        self.resid2 = self.residual_block(self.resid1, maps_shape=[3, 3, 128, 128], stride=1, name='resid2')
+        self.resid3 = self.residual_block(self.resid2, maps_shape=[3, 3, 128, 128], stride=1, name='resid3')
+        self.resid4 = self.residual_block(self.resid3, maps_shape=[3, 3, 128, 128], stride=1, name='resid4')
+        self.resid5 = self.residual_block(self.resid4, maps_shape=[3, 3, 128, 128], stride=1, name='resid5')
 
-    # Instance normalize inputs to reduce covariate shift and reduce dependency on input contrast to improve results
-    def instance_normalize(self, input):
-        # Mean and variances related to our instance
-        mean, var = tf.nn.moments(input, [1, 2], keep_dims=True)
-        normed_inputs = (input - mean) / (tf.sqrt(var) + epsilon)
-        return normed_inputs
+        self.deconv1 = self.deconv_block(self.resid5, maps_shape=[3, 3, 64, 128], stride=2, name='deconv1')
+        self.deconv2 = self.deconv_block(self.deconv1, maps_shape=[3, 3, 32, 64], stride=2, name='deconv1')
+
+        self.output = self.conv_block(self.deconv2, maps_shape=[9, 9, 32, 3],
+                                      padding=pad_conv, stride=1, name='output')
 
     # The residual blocks is comprised of two convolutional layers and aims to add long short-term memory to the network
-    def residual_block(self, inputs, layer):
-        conv1_out = self.conv_block(inputs, layer['filters_shape'], padding=pad_residual, stride=layer['stride'])
-        activations = tf.nn.relu(conv1_out)
+    def residual_block(self, inputs, maps_shape, stride, name):
+        with tf.variable_scope(name):
+            conv1_out = self.conv_block(inputs, maps_shape, padding=pad_resid, stride=stride, name='c1')
+            biases1 = tf.Variable(tf.constant(0., shape=[maps_shape[2]]))
+            conv1_out = tf.nn.bias_add(conv1_out, biases1)
+            activation = tf.nn.relu(conv1_out)
 
-        # Retrieve shapes to construct the next set of filters
-        activations_shape = activations.get_shape().as_list()
-        num_input_maps = activations_shape[3]
-        num_output_maps = layer['filters_shape'][3]
-        maps_shape = layer['filters_shape'][:2] + [num_input_maps, num_output_maps]
+            # Retrieve shapes to construct the next set of filters
+            activation_shape = activation.get_shape().as_list()
+            num_input_maps = activation_shape[3]
+            num_output_maps = maps_shape[3]
+            maps_shape = maps_shape[:2] + [num_input_maps, num_output_maps]
 
-        # Compute the second convolution and make sure that the output shape is appropriate
-        conv2_out = self.conv_block(activations, maps_shape, padding=pad_residual, stride=layer['stride'])
-        conv2_shape = conv2_out.get_shape().as_list()
+            # Compute the second convolution and make sure that the output shape is appropriate
+            conv2_out = self.conv_block(activation, maps_shape, padding=pad_resid, stride=stride, name='c2')
+            biases2 = tf.Variable(tf.constant(0., shape=[maps_shape[2]]))
+            conv2_out = tf.nn.bias_add(conv2_out, biases2)
+            conv2_shape = conv2_out.get_shape().as_list()
 
-        patch_height, patch_width, num_filters = conv2_shape[1:]
-        out_shape = [1, patch_height, patch_width, num_filters]
+            patch_height, patch_width, num_filters = conv2_shape[1:]
+            out_shape = [1, patch_height, patch_width, num_filters]
 
-        cropped_inputs = tf.slice(inputs, [0, 1, 1, 0], out_shape)
-        return conv2_out + cropped_inputs
+            cropped_inputs = tf.slice(inputs, [0, 1, 1, 0], out_shape)
+            return self.instance_normalize(conv2_out) + cropped_inputs

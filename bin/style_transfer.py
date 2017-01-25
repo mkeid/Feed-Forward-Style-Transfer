@@ -9,17 +9,18 @@ import styler
 import tensorflow as tf
 
 # Model Hyper Params
-content_layer = 'conv4_2'
-style_layers = {'conv1_1': .2, 'conv2_1': .2, 'conv3_1': .2, 'conv4_1': .2, 'conv5_1': 2}
-epochs = 160000
-learning_rate = .00003
-training_dims = {'height': 480, 'width': 640}
+content_layer = 'conv3_3'
+style_layers = {'conv1_1': .1, 'conv2_2': .1, 'conv3_3': .3, 'conv4_1': .3, 'conv5_1': .2}
+epochs = 30000
+learning_rate = .0001
+training_dims = {'height': 256, 'width': 256}
 print_training_status = True
 
+
 # Loss term weights
-content_weight = 1.
-style_weight = 3.
-tv_weight = .1
+content_weight = .05
+style_weight = .0000075
+tv_weight = 0
 
 # Default image paths
 dir_path = os.path.dirname(os.path.realpath(__file__))

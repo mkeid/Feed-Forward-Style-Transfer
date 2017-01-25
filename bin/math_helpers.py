@@ -58,7 +58,7 @@ def get_style_loss_for_layer(x, s, l):
 # Compute the L2-norm divided by squared number of dimensions
 def get_l2_norm_loss(diffs):
     shape = diffs.get_shape().as_list()
-    size = reduce(lambda x, y: x * y, shape) ** 2
+    size = reduce(lambda x, y: x * y, shape)
     sum_of_squared_diffs = tf.reduce_sum(tf.square(diffs))
     return sum_of_squared_diffs / size
 
