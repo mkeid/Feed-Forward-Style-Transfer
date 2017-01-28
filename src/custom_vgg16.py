@@ -1,3 +1,8 @@
+"""
+    Author: Chris (https://github.com/machrisaa)
+    Description: tensorflow implemention of VGG 16 and VGG 19 based on tensorflow-vgg16
+"""
+
 import os
 import tensorflow as tf
 import numpy as np

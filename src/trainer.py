@@ -1,9 +1,6 @@
 """
     Author: Mohamed K. Eid (mohamedkeid@gmail.com)
     Description: trainer class for training a new generative model
-
-    Args:
-
 """
 
 import custom_vgg16 as vgg16

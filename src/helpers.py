@@ -1,3 +1,8 @@
+"""
+    Author: Mohamed K. Eid (mohamedkeid@gmail.com)
+    Description: helper class containing various methods with their functions ranging from image retrieval to auxiliary math helpers
+"""
+
 import numpy as np
 import tensorflow as tf
 from functools import reduce
