@@ -1,14 +1,15 @@
-#!/usr/bin/python
-# Mohamed K. Eid (mohamedkeid@gmail.com)
-
+"""
+    Author: Mohamed K. Eid (mohamedkeid@gmail.com)
+    Description: generative model with the architectural specifications suited for artistic style transfer
+"""
 import tensorflow as tf
 
 # Model hyperparameters
-decay = .9
-epsilon = 1e-8
+DECAY = .9
+EPSILON = 1e-8
 
 
-class GenNet:
+class Generator:
     def __init__(self, weights_path=None):
         if weights_path is not None:
             self.load_net(weights_path)
@@ -50,11 +51,11 @@ class GenNet:
 
             shift = tf.Variable(tf.constant(.1, shape=[channels]))
             scale = tf.Variable(tf.ones([channels]))
-            normalized = (inputs - mu) / (sigma_sq + epsilon) ** .5
+            normalized = (inputs - mu) / (sigma_sq + EPSILON) ** .5
 
             return scale * normalized + shift
 
-    #
+    # Pads input of the image so the output is the same dimensions even after deconvolution
     @staticmethod
     def _pad(inputs, size):
         return tf.pad(inputs, [[0, 0], [size, size], [size, size], [0, 0]], "REFLECT")
@@ -71,7 +72,7 @@ class GenNet:
             batch_mean, batch_var = tf.nn.moments(inputs, [0, 1, 2])
 
             # Create an optimizer to maintain a 'moving average'
-            ema = tf.train.ExponentialMovingAverage(decay=decay)
+            ema = tf.train.ExponentialMovingAverage(decay=DECAY)
 
             def ema_retrieve():
                 return ema.average(batch_mean), ema.average(batch_var)
@@ -86,7 +87,7 @@ class GenNet:
 
             # Retrieve the means and variances and apply the BN transformation
             mean, var = tf.cond(tf.equal(is_training, True), ema_update, ema_retrieve)
-            bn_inputs = tf.nn.batch_normalization(inputs, mean, var, offset, scale, epsilon)
+            bn_inputs = tf.nn.batch_normalization(inputs, mean, var, offset, scale, EPSILON)
 
         return bn_inputs
 

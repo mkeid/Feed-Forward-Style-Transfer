@@ -1,6 +1,10 @@
 import numpy as np
 import tensorflow as tf
 from functools import reduce
+import skimage
+import skimage.io
+import skimage.transform
+from scipy.misc import toimage
 
 
 # Compute the content loss given a variable image (x) and a content image (c)
@@ -78,3 +82,54 @@ def get_total_variation(x, shape, smoothing=1.5):
         smoothed_terms = tf.pow(left_term + right_term, smoothing / 2.)
 
         return tf.reduce_sum(smoothed_terms) / size
+
+
+# Returns a numpy array of an image specified by its path
+def load_img(path):
+    # Load image [height, width, depth]
+    img = skimage.io.imread(path) / 255.0
+    assert (0 <= img).all() and (img <= 1.0).all()
+
+    # Crop image from center
+    short_edge = min(img.shape[:2])
+    yy = int((img.shape[0] - short_edge) / 2)
+    xx = int((img.shape[1] - short_edge) / 2)
+    shape = list(img.shape)
+
+    crop_img = img[yy: yy + short_edge, xx: xx + short_edge]
+    resized_img = skimage.transform.resize(crop_img, (shape[0], shape[1]))
+    return resized_img, shape
+
+
+# Returns a resized numpy array of an image specified by its path
+def load_img_to(path, height=None, width=None):
+    # Load image
+    img = skimage.io.imread(path) / 255.0
+    if height is not None and width is not None:
+        ny = height
+        nx = width
+    elif height is not None:
+        ny = height
+        nx = img.shape[1] * ny / img.shape[0]
+    elif width is not None:
+        nx = width
+        ny = img.shape[0] * nx / img.shape[1]
+    else:
+        ny = img.shape[0]
+        nx = img.shape[1]
+
+    if len(img.shape) < 3:
+        img = np.dstack((img, img, img))
+
+    return skimage.transform.resize(img, (ny, nx)), [ny, nx, 3]
+
+
+# Renders the generated image given a tensorflow session and a variable image (x)
+def render(img, display=False, path_out=None):
+    clipped_img = np.clip(img, 0., 1.)
+
+    if display:
+        toimage(np.reshape(clipped_img, img.shape[1:])).show()
+
+    if path_out:
+        toimage(np.reshape(clipped_img, img.shape[1:])).save(path_out)
