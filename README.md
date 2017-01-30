@@ -14,30 +14,35 @@ We used a pretrained [VGG network](https://arxiv.org/pdf/1409.1556.pdf), which i
 ## Results
 
 <table style="width:100%">
+
   <tr>
     <td></td>
-    <td><img src="./lib/images/style/great-wave-of-kanagawa.jpg" height="240px" width=100%"></td> 
-    <td><img src="lib/images/style/starry-night.jpg" height="240px" width="100%"></td> 
-    <td><img src="lib/images/style/alley-by-the-lake.jpg" height="240px" width="100%"></td> 
+    <td><img src="./lib/images/style/great-wave-of-kanagawa.jpg" height="194px" width="194px"></td> 
+    <td><img src="lib/images/style/starry-night.jpg" height="194px" width="194px"></td> 
+    <td><img src="lib/images/style/alley-by-the-lake.jpg" height="194px" width="194px"></td> 
   </tr>
+  
   <tr>
-    <td><img src="lib/images/content/nyc.jpg" height="240px" width="100%"></td>
-    <td><img src="lib/images/examples/nyc-wave.jpg" height="240px" width="100%"></td> 
-    <td><img src="lib/images/examples/nyc-night.jpg" height="240px" width="100%"></td> 
-    <td><img src="lib/images/examples/nyc-alley.jpg" height="240px" width="100%"></td> 
+    <td><img src="lib/images/content/nyc.jpg" height="194px" width="194px"></td>
+    <td><img src="lib/images/examples/nyc-wave.jpg" height="194px" width="194px"></td> 
+    <td><img src="lib/images/examples/nyc-night.jpg" height="194px" width="194px"></td> 
+    <td><img src="lib/images/examples/nyc-alley.jpg" height="194px" width="194px"></td> 
   </tr>
+  
   <tr>
-    <td><img src="lib/images/content/beach.jpg" height="240px" width="100%"></td>
-    <td><img src="lib/images/examples/beach-wave.jpg" height="240px" width="100%"></td> 
-    <td><img src="lib/images/examples/beach-night.jpg" height="240px" width="100%"></td> 
-    <td><img src="lib/images/examples/beach-alley.jpg" height="240px" width="100%"></td> 
+    <td><img src="lib/images/content/beach.jpg" height="194px" width="194px"></td>
+    <td><img src="lib/images/examples/beach-wave.jpg" height="194px" width="194px"></td> 
+    <td><img src="lib/images/examples/beach-night.jpg" height="194px" width="194px"></td> 
+    <td><img src="lib/images/examples/beach-alley.jpg" height="194px" width="194px"></td> 
   </tr>
+  
   <tr>
-    <td><img src="lib/images/content/drawing.jpg" height="240px" width="100%"></td>
-    <td><img src="lib/images/examples/drawing-wave.jpg" height="240px" width=100%"></td> 
-    <td><img src="lib/images/examples/drawing-night.jpg" height="240px" width="100%"></td> 
-    <td><img src="lib/images/examples/drawing-alley.jpg" height="240px" width="100%"></td> 
+    <td><img src="lib/images/content/drawing.jpg" height="194px" width="194px"></td>
+    <td><img src="lib/images/examples/drawing-wave.jpg" height="194px" width="194px"></td> 
+    <td><img src="lib/images/examples/drawing-night.jpg" height="194px" width="194px"></td> 
+    <td><img src="lib/images/examples/drawing-alley.jpg" height="194px" width="194px"></td> 
   </tr>
+  
 </table>
 
 ## Prerequisites
