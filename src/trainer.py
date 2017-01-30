@@ -14,22 +14,21 @@ import zipfile
 
 
 class Trainer:
-    def __init__(self, session, net):
+    def __init__(self, session, net, train_path, train_dims, print_training_status=True, print_every_n=100):
         self.current_path = os.path.dirname(os.path.realpath(__file__))
-        self.examples = []
         self.net = net
         self.paths = {
             'out_dir': self.current_path + '/../output/',
-            'style_file': self.current_path + '/../lib/images/style/great-wave-of-kanagawa.jpg',
+            'style_file': train_path,
             'trained_generators_dir': self.current_path + '/../lib/generators/',
             'training_dir': self.current_path + '/../lib/images/train2014/',
             'training_url': 'http://msvocds.blob.core.windows.net/coco2014/train2014.zip'
         }
         self.session = session
-        self.train_height = 400
-        self.train_width = 400
-        self.print_training_status = True
-        self.train_n = 100
+        self.train_height = train_dims['height']
+        self.train_width = train_dims['width']
+        self.print_training_status = print_training_status
+        self.train_n = print_every_n
 
     # Checks for training data to see if it's missing or not. Asks to download if missing.
     def check_for_examples(self):
@@ -158,7 +157,7 @@ class Trainer:
 
             if self.print_training_status and i % self.train_n == 0:
                 print("Epoch %06d | Loss %.06f" % (i, loss))
-                in_path = self.current_path + '/../nyc.jpg'
+                in_path = self.current_path + '/../lib/images/content/nyc.jpg'
                 input_img, input_shape = helpers.load_img_to(in_path, height=self.train_height, width=self.train_width)
                 input_img = input_img.reshape([1] + input_shape).astype(np.float32)
                 path_out = self.current_path + '/../output/' + str(start_time) + '.jpg'
@@ -178,4 +177,4 @@ class Trainer:
         if not os.path.isdir(gen_dir):
             os.makedirs(gen_dir)
         saver = tf.train.Saver(trainable_vars)
-        saver.save(self.session, gen_dir + name + '.ckpt')
+        saver.save(self.session, gen_dir + name)

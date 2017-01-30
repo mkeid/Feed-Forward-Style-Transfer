@@ -10,12 +10,8 @@ EPSILON = 1e-8
 
 
 class Generator:
-    def __init__(self, weights_path=None):
-        if weights_path is not None:
-            self.load_net(weights_path)
-            self.training = False
-        else:
-            self.training = True
+    def __init__(self, is_training=True):
+        self.training = is_training
 
     # Constructs the generative network's layers. Normally called after initialization.
     def build(self, img):

@@ -13,10 +13,10 @@
 
 import argparse
 import generator
+import helpers
 import os
 import tensorflow as tf
 import time
-import train
 
 # Loss term weights
 CONTENT_WEIGHT = 1.
@@ -54,14 +54,28 @@ def list_styles():
 with tf.Session() as sess:
     parse_args()
 
+    # Check if there is a model trained on the given style
+    if not os.path.isdir(TRAINED_MODELS_PATH + STYLE):
+        print("No trained model with the style '%s' was found." % STYLE)
+        list_styles()
+        exit(1)
+
+    input_img, _ = helpers.load_img_to(INPUT_PATH, 255, 255)
+    input_img = tf.convert_to_tensor(input_img, dtype=tf.float32)
+    input_img = tf.expand_dims(input_img, dim=0)
+
     with tf.variable_scope('generator'):
         gen = generator.Generator()
-        trainer = train.Trainer(sess, gen)
+        gen.build(tf.convert_to_tensor(input_img))
+        sess.run(tf.initialize_all_variables())
 
-        # Check if there is a model trained on the given style
-        if os.path.isfile(TRAINED_MODELS_PATH + STYLE):
-            trainer.load_style(STYLE)
-            trainer.stylize(INPUT_PATH)
-        else:
-            print('')
-            list_styles()
+    ckpt_dir = TRAINED_MODELS_PATH + STYLE
+    saved_path = ckpt_dir + "/{}".format(STYLE)
+    saver = tf.train.Saver()
+    saver.restore(sess, saved_path)
+
+    #
+    img = sess.run(gen.output)
+
+    #
+    helpers.render(img, path_out=OUT_PATH)

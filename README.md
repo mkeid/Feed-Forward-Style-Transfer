@@ -1,36 +1,42 @@
 # *Feed-Forward-Style-Transfer* implemented in TensorFlow
 
 This is a TensorFlow implementation of *[Perceptual Losses for Real-Time Style Transfer
-and Super-Resolution](http://cs.stanford.edu/people/jcjohns/papers/eccv16/JohnsonECCV16.pdf)* using [instance normalization]() as a regularizer to improve training efficiency and test results.<a name="footnote1"><sup>1</sup></a>
+and Super-Resolution](http://cs.stanford.edu/people/jcjohns/papers/eccv16/JohnsonECCV16.pdf)* using [instance normalization]() as a regularizer to improve training efficiency and test results.<sup>[1](#footnote1)</sup>
 
-<sup>[1](#footnote1)</sup> Our [generative network](../src/generator.py) can still support [batch normalization](https://arxiv.org/pdf/1502.03167v3.pdf) if needed. Simply replace instance normalization calls with batch normalization and adjust the generator's input size.
+The loss derived from *[A Neural Algorithm of Artistic Style](https://arxiv.org/pdf/1508.06576v2.pdf)* is used to train a generative neural network to apply artistic style transfer to some input image. [Total variation denoising](http://eeweb.poly.edu/iselesni/lecture_notes/TVDmm/TVDmm.pdf) is used as a regularizer to reduce unrealistic constrast between adjacent pixels, which in turn reduces visible noise. 
+
+Unlike the non-feed-forward implementation, our implementation is deterministic due to the nature of the generator.
+
+We used a pretrained [VGG network](https://arxiv.org/pdf/1409.1556.pdf), which is provided [here](https://github.com/machrisaa/tensorflow-vgg) by [machrisaa](https://github.com/machrisaa) on GitHub. The VGG implementation was customized to accomodate our requirements and is of the 16-layer variety.
+
+<sup name="footnote1">1</sup> Our [generative network](../src/generator.py) can still support [batch normalization](https://arxiv.org/pdf/1502.03167v3.pdf) if needed. Simply replace instance normalization calls with batch normalization and adjust the generator's input size.
 
 ## Results
 
 <table style="width:100%">
   <tr>
     <td></td>
-    <td><img src="" width=100%"></td> 
-    <td><img src="" width="100%"></td> 
-    <td><img src="" width="100%"></td> 
+    <td><img src="./lib/images/style/great-wave-of-kanagawa.jpg" height="240px" width=100%"></td> 
+    <td><img src="lib/images/style/starry-night.jpg" height="240px" width="100%"></td> 
+    <td><img src="lib/images/style/alley-by-the-lake.jpg" height="240px" width="100%"></td> 
   </tr>
   <tr>
-    <td><img src="" width="100%"></td>
-    <td><img src="" width="100%"></td> 
-    <td><img src="" width="100%"></td> 
-    <td><img src="" width="100%"></td> 
+    <td><img src="lib/images/content/nyc.jpg" height="240px" width="100%"></td>
+    <td><img src="lib/images/examples/nyc-wave.jpg" height="240px" width="100%"></td> 
+    <td><img src="lib/images/examples/nyc-night.jpg" height="240px" width="100%"></td> 
+    <td><img src="lib/images/examples/nyc-alley.jpg" height="240px" width="100%"></td> 
   </tr>
   <tr>
-    <td><img src="" width="100%"></td>
-    <td><img src="" width="100%"></td> 
-    <td><img src="" width="100%"></td> 
-    <td><img src="" width="100%"></td> 
+    <td><img src="lib/images/content/beach.jpg" height="240px" width="100%"></td>
+    <td><img src="lib/images/examples/beach-wave.jpg" height="240px" width="100%"></td> 
+    <td><img src="lib/images/examples/beach-night.jpg" height="240px" width="100%"></td> 
+    <td><img src="lib/images/examples/beach-alley.jpg" height="240px" width="100%"></td> 
   </tr>
   <tr>
-    <td><img src="" width="100%"></td>
-    <td><img src="" width=100%"></td> 
-    <td><img src="" width="100%"></td> 
-    <td><img src="" width="100%"></td> 
+    <td><img src="lib/images/content/drawing.jpg" height="240px" width="100%"></td>
+    <td><img src="lib/images/examples/drawing-wave.jpg" height="240px" width=100%"></td> 
+    <td><img src="lib/images/examples/drawing-night.jpg" height="240px" width="100%"></td> 
+    <td><img src="lib/images/examples/drawing-alley.jpg" height="240px" width="100%"></td> 
   </tr>
 </table>
 
