@@ -30,46 +30,6 @@ class Trainer:
         self.print_training_status = print_training_status
         self.train_n = print_every_n
 
-    # Checks for training data to see if it's missing or not. Asks to download if missing.
-    def check_for_examples(self):
-
-        def ask_to_download():
-            answer = 0
-            while answer is not 'y' and answer is not 'N':
-                answer = input("Would you like to download the 13 GB file? [y/N] ").replace(" ", "")
-
-            # Download weights if yes, else exit the program
-            if answer == 'y':
-                print("Downloading from %s. Please be patient..." % self.paths['training_url'])
-
-                urllib.request.urlretrieve(self.paths['training_dir'], 'train2014.zip')
-                ask_to_unzip(self.paths['training'] + 'train2014.zip')
-            elif answer == 'N':
-                print("Exiting the program..")
-                exit(0)
-
-        # Asks on stdout to unzip a given zip file path. Unizips if response is 'y'
-        def ask_to_unzip(path):
-            answer = 0
-            while answer is not 'y' and answer is not 'N':
-                answer = input("The application requires the file to be unzipped. Unzip? [y/N] ").replace(" ", "")
-
-            if answer == 'y':
-                print("Unzipping file..")
-                zip_ref = zipfile.ZipFile(path, 'r')
-                zip_ref.extractall(self.paths['training_dir'])
-                zip_ref.close()
-            else:
-                print("Please unzip the program manually to run the program. Exiting..")
-                exit(0)
-
-        training_files = os.listdir(self.paths['training_dir'])
-        num_training_files = len(training_files)
-
-        if num_training_files <= 1:
-            print("Training data could not be found.")
-            ask_to_download()
-
     # Retrieves next example image from queue
     def next_example(self, height, width):
         filenames = tf.train.match_filenames_once(self.paths['training_dir'] + '*.jpg')
@@ -82,7 +42,7 @@ class Trainer:
 
     def train(self, epochs, learning_rate, content_layer, content_weight, style_layers, style_weight, tv_weight):
         # Check if there is training data available and initialize generator network
-        self.check_for_examples()
+        self._check_for_examples()
 
         # Initialize and process images and placeholders to be used for our descriptors
         art, art_shape = helpers.load_img_to(self.paths['style_file'], height=self.train_height, width=self.train_width)
@@ -178,3 +138,62 @@ class Trainer:
             os.makedirs(gen_dir)
         saver = tf.train.Saver(trainable_vars)
         saver.save(self.session, gen_dir + name)
+
+    # Checks for training data to see if it's missing or not. Asks to download if missing.
+    def _check_for_examples(self):
+        # Asks on stdout to download MSCOCO data. Downloads if response is 'y'
+        def ask_to_download():
+            print("You've requested to train a new model. However, you've yet to download the training data.")
+
+            answer = 0
+            while answer is not 'y' and answer is not 'N':
+                answer = input("Would you like to download the 13 GB file? [y/N] ").replace(" ", "")
+
+            # Download weights if yes, else exit the program
+            if answer == 'y':
+                print("Downloading from %s. Please be patient..." % self.paths['training_url'])
+
+                zip_save_path = self.current_path + '/../lib/images/train2014.zip'
+                urllib.request.urlretrieve(self.paths['training_url'], zip_save_path)
+                ask_to_unzip(zip_save_path)
+            elif answer == 'N':
+                print("Exiting the program..")
+                self._exit()
+
+        # Asks on stdout to unzip a given zip file path. Unizips if response is 'y'
+        def ask_to_unzip(path):
+            answer = 0
+            while answer is not 'y' and answer is not 'N':
+                answer = input("The application requires the file to be unzipped. Unzip? [y/N] ").replace(" ", "")
+
+            if answer == 'y':
+                if not os.path.isdir(self.paths['training_dir']):
+                    os.makedirs(self.paths['training_dir'])
+
+                print("Unzipping file..")
+                zip_ref = zipfile.ZipFile(path, 'r')
+                zip_ref.extractall(self.paths['training_dir'])
+                zip_ref.close()
+                os.remove(path)
+            else:
+                print("Please unzip the program manually to run the program. Exiting..")
+                self._exit()
+
+        # Ask to unzip training data if a previous attempt was made
+        zip_path = os.path.abspath(self.current_path + '/../lib/images/train2014.zip')
+        if os.path.isfile(zip_path):
+            ask_to_unzip(zip_path)
+
+        # Ask to download training data if the training dir does not exist or does not contain the needed files
+        if not os.path.isdir(self.paths['training_dir']):
+            ask_to_download()
+        else:
+            training_files = os.listdir(self.paths['training_dir'])
+            num_training_files = len(training_files)
+            if num_training_files <= 1:
+                ask_to_download()
+
+    def _exit(self, rc=0):
+        print("Exiting the program..")
+        self.session.close()
+        exit(rc)

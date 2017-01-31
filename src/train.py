@@ -18,7 +18,7 @@ import trainer
 CONTENT_LAYER = 'conv3_3'
 STYLE_LAYERS = {'conv1_2': .25, 'conv2_2': .25, 'conv3_3': .25, 'conv4_3': .25}
 EPOCHS = 250000
-LEARNING_RATE = .0002
+LEARNING_RATE = .0001
 TRAINING_DIMS = {'height': 256, 'width': 256}
 PRINT_TRAINING_STATUS = True
 PRINT_EVERY_N = 100
@@ -52,3 +52,4 @@ with tf.Session() as sess:
         gen = generator.Generator()
         t = trainer.Trainer(sess, gen, TRAIN_PATH, TRAINING_DIMS, PRINT_TRAINING_STATUS, PRINT_EVERY_N)
         t.train(EPOCHS, LEARNING_RATE, CONTENT_LAYER, CONTENT_WEIGHT, STYLE_LAYERS, STYLE_WEIGHT, TV_WEIGHT)
+    sess.close()

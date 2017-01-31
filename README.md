@@ -17,7 +17,7 @@ We used a pretrained [VGG network](https://arxiv.org/pdf/1409.1556.pdf), which i
 
   <tr>
     <td></td>
-    <td><img src="./lib/images/style/great-wave-of-kanagawa.jpg" height="194px" width="194px"></td> 
+    <td><img src="lib/images/style/great-wave-of-kanagawa.jpg" height="194px" width="194px"></td> 
     <td><img src="lib/images/style/starry-night.jpg" height="194px" width="194px"></td> 
     <td><img src="lib/images/style/alley-by-the-lake.jpg" height="194px" width="194px"></td> 
   </tr>
@@ -55,14 +55,12 @@ We used a pretrained [VGG network](https://arxiv.org/pdf/1409.1556.pdf), which i
 ## Usage
 
 To train a generative model to apply artistic style transfer invoke *train.py* with the file path of the image who's style you'd like to learn. 
-A new directory with the name of the file will be created under the [lib/generators](lib/generators) and it will contain the network's trained paramater values for future use. 
+A new directory with the name of the file will be created under the [lib/generators](./lib/generators) and it will contain the network's trained paramater values for future use. 
 
 ```
 python train.py /path/to/style/image
 
 ```
-
-<br>
 
 To apply artistic style transfer to an image, invoke *test.py* with its file path through --input and specify the desired style through --style (i.e., "starry-night").
 
@@ -70,9 +68,7 @@ To apply artistic style transfer to an image, invoke *test.py* with its file pat
 python test.py --input /path/to/input/image --style "style name"
 ```
 
-<br>
-
-To list available styles (trained models in [lib/generators](lib/generators), invoke *test.py* with the --styles flag.
+To list available styles (trained models in [lib/generators](./lib/generators), invoke *test.py* with the --styles flag.
 
 ```
 python test.py --styles
@@ -81,27 +77,27 @@ python test.py --styles
 
 ## Files
 
-* [test.py](../src/test.py)
+* [test.py](./src/test.py)
 
     Stylizes an image using a generative model trained on a particular style.
 
-* [train.py](../src/train.py)
+* [train.py](./src/train.py)
 
     Trains a generative model for stylizing an unseen image input with a particular style.
     
-* [trainer.py](../src/trainer.py)
+* [trainer.py](./src/trainer.py)
 
     Trainer class for training a new generative model. This script is called from *train.py* after a style image path is specified.
 
-* [generator.py](../src/generator.py)
+* [generator.py](./src/generator.py)
 
     Generative model with the architectural specifications suited for artistic style transfer.
 
-* [helpers.py](../src/helpers.py)
+* [helpers.py](./src/helpers.py)
 
     Helper class containing various methods with their functions ranging from image retrieval to auxiliary math helpers.
 
-* [custom_vgg16.py](../src/custom_vgg16.py)
+* [custom_vgg16.py](./src/custom_vgg16.py)
 
     Descriminative model trained on image classification used for gathering statistics to describe our loss measure.
 
