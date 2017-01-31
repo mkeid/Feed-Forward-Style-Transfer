@@ -75,7 +75,7 @@ with tf.Session() as sess:
         exit(1)
 
     # Load and initialize the image to be stlylized
-    input_img, _ = helpers.load_img_to(INPUT_PATH, 255, 255)
+    input_img, _ = helpers.load_img(INPUT_PATH)
     input_img = tf.convert_to_tensor(input_img, dtype=tf.float32)
     input_img = tf.expand_dims(input_img, dim=0)
 

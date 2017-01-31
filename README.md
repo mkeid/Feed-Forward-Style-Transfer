@@ -1,5 +1,7 @@
 # *Feed-Forward-Style-Transfer* implemented in TensorFlow
 
+<div style="text-align:center"><img src="lib/images/examples/cover.jpg" height="480px" width="640px"></div>
+
 This is a TensorFlow implementation of *[Perceptual Losses for Real-Time Style Transfer
 and Super-Resolution](http://cs.stanford.edu/people/jcjohns/papers/eccv16/JohnsonECCV16.pdf)* using [instance normalization]() as a regularizer to improve training efficiency and test results.<sup>[1](#footnote1)</sup>
 
