@@ -9,7 +9,11 @@ The loss derived from *[A Neural Algorithm of Artistic Style](https://arxiv.org/
 
 Unlike the non-feed-forward implementation, our implementation is deterministic due to the nature of the generator.
 
-We used a pretrained [VGG network](https://arxiv.org/pdf/1409.1556.pdf), which is provided [here](https://github.com/machrisaa/tensorflow-vgg) by [machrisaa](https://github.com/machrisaa) on GitHub. The VGG implementation was customized to accomodate our requirements and is of the 16-layer variety.
+#### Implementation Architecture
+
+We used a generative convolutional neural network with downsampling layers followed by [residual blocks](https://arxiv.org/abs/1512.03385) then upsampling by [deconvolutional](https://en.wikipedia.org/wiki/Deconvolution) layers. Normalization of inputs is performed to reducing internal covariate shift.
+
+For description of the generator's output, we used a pretrained [VGG network](https://arxiv.org/pdf/1409.1556.pdf), which is provided [here](https://github.com/machrisaa/tensorflow-vgg) by [machrisaa](https://github.com/machrisaa) on GitHub. The VGG implementation was customized to accomodate our requirements and is of the 16-layer variety.
 
 <sup name="footnote1">1</sup> Our [generative network](../src/generator.py) can still support [batch normalization](https://arxiv.org/pdf/1502.03167v3.pdf) if needed. Simply replace instance normalization calls with batch normalization and adjust the generator's input size.
 
@@ -61,7 +65,6 @@ A new directory with the name of the file will be created under the [lib/generat
 
 ```
 python train.py /path/to/style/image
-
 ```
 
 To apply artistic style transfer to an image, invoke *test.py* with its file path through --input and specify the desired style through --style (i.e., "starry-night").
