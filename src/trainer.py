@@ -30,16 +30,6 @@ class Trainer:
         self.print_training_status = print_training_status
         self.train_n = print_every_n
 
-    # Retrieves next example image from queue
-    def next_example(self, height, width):
-        filenames = tf.train.match_filenames_once(self.paths['training_dir'] + '*.jpg')
-        filename_queue = tf.train.string_input_producer(filenames)
-        reader = tf.WholeFileReader()
-        _, files = reader.read(filename_queue)
-        training_img = tf.image.decode_jpeg(files, channels=3)
-        training_img = tf.image.resize_images(training_img, [height, width])
-        return training_img
-
     def train(self, epochs, learning_rate, content_layer, content_weight, style_layers, style_weight, tv_weight):
         # Check if there is training data available and initialize generator network
         self.__check_for_examples()
@@ -96,9 +86,10 @@ class Trainer:
 
         # Populate the training data
         print("Initializing session and loading training images..")
-        example = self.next_example(height=art_shape[1], width=art_shape[2])
+        example = self.__next_example(height=art_shape[1], width=art_shape[2])
         self.session.run(tf.initialize_all_variables())
 
+        # Initialize threads and begin training
         print("Begining training..")
         coord = tf.train.Coordinator()
         threads = tf.train.start_queue_runners(coord=coord)
@@ -117,12 +108,6 @@ class Trainer:
 
             if self.print_training_status and i % self.train_n == 0:
                 print("Epoch %06d | Loss %.06f" % (i, loss))
-                in_path = self.current_path + '/../lib/images/content/nyc.jpg'
-                input_img, input_shape = helpers.load_img_to(in_path, height=self.train_height, width=self.train_width)
-                input_img = input_img.reshape([1] + input_shape).astype(np.float32)
-                path_out = self.current_path + '/../output/' + str(start_time) + '.jpg'
-                img = self.session.run(variable_img, feed_dict={variable_placeholder: input_img})
-                helpers.render(img, path_out=path_out)
 
         # Alert that training has been completed and print the run time
         elapsed = time.time() - start_time
@@ -130,14 +115,7 @@ class Trainer:
         coord.request_stop()
         coord.join(threads)
 
-        # Save the weights with the name of the references style so that the net may stylize future images
-        print("Proceeding to save weights..")
-        name = os.path.basename(self.paths['style_file']).replace('.jpg', '')
-        gen_dir = self.paths['trained_generators_dir'] + name + '/'
-        if not os.path.isdir(gen_dir):
-            os.makedirs(gen_dir)
-        saver = tf.train.Saver(trainable_vars)
-        saver.save(self.session, gen_dir + name)
+        self.__save_model(trainable_vars)
 
     # Checks for training data to see if it's missing or not. Asks to download if missing.
     def __check_for_examples(self):
@@ -157,8 +135,7 @@ class Trainer:
                 urllib.request.urlretrieve(self.paths['training_url'], zip_save_path)
                 ask_to_unzip(zip_save_path)
             elif answer == 'N':
-                print("Exiting the program..")
-                self._exit()
+                self.__exit()
 
         # Asks on stdout to unzip a given zip file path. Unizips if response is 'y'
         def ask_to_unzip(path):
@@ -172,12 +149,11 @@ class Trainer:
 
                 print("Unzipping file..")
                 zip_ref = zipfile.ZipFile(path, 'r')
-                zip_ref.extractall(self.paths['training_dir'])
+                zip_ref.extractall(self.current_path + '/../lib/')
                 zip_ref.close()
                 os.remove(path)
             else:
-                print("Please unzip the program manually to run the program. Exiting..")
-                self._exit()
+                self.__exit(0, message="Please unzip the program manually to run the program. Exiting..")
 
         # Ask to unzip training data if a previous attempt was made
         zip_path = os.path.abspath(self.current_path + '/../lib/images/train2014.zip')
@@ -193,7 +169,29 @@ class Trainer:
             if num_training_files <= 1:
                 ask_to_download()
 
-    def _exit(self, rc=0):
-        print("Exiting the program..")
+                # Retrieves next example image from queue
+
+    # Returns a new training example
+    def __next_example(self, height, width):
+        filenames = tf.train.match_filenames_once(self.paths['training_dir'] + '*.jpg')
+        filename_queue = tf.train.string_input_producer(filenames)
+        reader = tf.WholeFileReader()
+        _, files = reader.read(filename_queue)
+        training_img = tf.image.decode_jpeg(files, channels=3)
+        training_img = tf.image.resize_images(training_img, [height, width])
+        return training_img
+
+    # Saves the weights with the name of the references style so that the net may stylize future images
+    def __save_model(self, variables):
+        print("Proceeding to save weights..")
+        name = os.path.basename(self.paths['style_file']).replace('.jpg', '')
+        gen_dir = self.paths['trained_generators_dir'] + name + '/'
+        if not os.path.isdir(gen_dir):
+            os.makedirs(gen_dir)
+        saver = tf.train.Saver(variables)
+        saver.save(self.session, gen_dir + name)
+
+    def __exit(self, rc=0, message="Exiting the program.."):
+        print(message)
         self.session.close()
         exit(rc)
