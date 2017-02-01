@@ -7,15 +7,15 @@ and Super-Resolution](http://cs.stanford.edu/people/jcjohns/papers/eccv16/Johnso
 
 The loss derived from *[A Neural Algorithm of Artistic Style](https://arxiv.org/pdf/1508.06576v2.pdf)* is used to train a generative neural network to apply artistic style transfer to some input image. [Total variation denoising](http://eeweb.poly.edu/iselesni/lecture_notes/TVDmm/TVDmm.pdf) is used as a regularizer to reduce unrealistic constrast between adjacent pixels, which in turn reduces visible noise. 
 
-Unlike the non-feed-forward implementation, our implementation is deterministic due to the nature of the generator.
+Unlike the non-feed-forward implementation, this implementation is deterministic due to the nature of the generator.
 
 #### Implementation Architecture
 
-We used a generative convolutional neural network with downsampling layers followed by [residual blocks](https://arxiv.org/abs/1512.03385) then upsampling by [deconvolutional](https://en.wikipedia.org/wiki/Deconvolution) layers. Normalization of inputs is performed to reducing internal covariate shift.
+A generative convolutional neural network was used with downsampling layers followed by [residual blocks](https://arxiv.org/abs/1512.03385) then upsampling by [deconvolutional](https://en.wikipedia.org/wiki/Deconvolution) layers. Normalization of inputs is performed to reducing internal covariate shift.
 
-For description of the generator's output, we used a pretrained [VGG network](https://arxiv.org/pdf/1409.1556.pdf), which is provided [here](https://github.com/machrisaa/tensorflow-vgg) by [machrisaa](https://github.com/machrisaa) on GitHub. The VGG implementation was customized to accomodate our requirements and is of the 16-layer variety.
+For description of the generator's output, a pretrained [VGG network](https://arxiv.org/pdf/1409.1556.pdf) was used. It is provided [here](https://github.com/machrisaa/tensorflow-vgg) by [machrisaa](https://github.com/machrisaa) on GitHub. The VGG implementation was customized to accomodate the implementation requirements requirements and is of the 16-layer variety.
 
-<sup name="footnote1">1</sup> Our [generative network](../src/generator.py) can still support [batch normalization](https://arxiv.org/pdf/1502.03167v3.pdf) if needed. Simply replace instance normalization calls with batch normalization and adjust the generator's input size.
+<sup name="footnote1">1</sup> The [generative network](../src/generator.py) can still support [batch normalization](https://arxiv.org/pdf/1502.03167v3.pdf) if needed. Simply replace instance normalization calls with batch normalization and adjust the generator's input size.
 
 ## Results
 
@@ -104,6 +104,6 @@ python test.py --styles
 
 * [custom_vgg16.py](./src/custom_vgg16.py)
 
-    Descriminative model trained on image classification used for gathering statistics to describe our loss measure.
+    Descriminative model trained on image classification used for gathering descriptive statistics for the loss measure.
 
     The weights used by the VGG network. This file is not in this repository due to its size. You must download it and place in the working directory. The program will complain and ask for you to download it with a supplied link if it does not find it.

@@ -15,32 +15,32 @@ class Generator:
 
     # Constructs the generative network's layers. Normally called after initialization.
     def build(self, img):
-        self.padded = self._pad(img, 40)
+        self.padded = self.__pad(img, 40)
 
-        self.conv1 = self._conv_block(self.padded, maps_shape=[9, 9, 3, 32], stride=1, name='conv1')
-        self.conv2 = self._conv_block(self.conv1, maps_shape=[3, 3, 32, 64], stride=2, name='conv2')
-        self.conv3 = self._conv_block(self.conv2, maps_shape=[3, 3, 64, 128], stride=2, name='conv3')
+        self.conv1 = self.__conv_block(self.padded, maps_shape=[9, 9, 3, 32], stride=1, name='conv1')
+        self.conv2 = self.__conv_block(self.conv1, maps_shape=[3, 3, 32, 64], stride=2, name='conv2')
+        self.conv3 = self.__conv_block(self.conv2, maps_shape=[3, 3, 64, 128], stride=2, name='conv3')
 
-        self.resid1 = self._residual_block(self.conv3, maps_shape=[3, 3, 128, 128], stride=1, name='resid1')
-        self.resid2 = self._residual_block(self.resid1, maps_shape=[3, 3, 128, 128], stride=1, name='resid2')
-        self.resid3 = self._residual_block(self.resid2, maps_shape=[3, 3, 128, 128], stride=1, name='resid3')
-        self.resid4 = self._residual_block(self.resid3, maps_shape=[3, 3, 128, 128], stride=1, name='resid4')
-        self.resid5 = self._residual_block(self.resid4, maps_shape=[3, 3, 128, 128], stride=1, name='resid5')
+        self.resid1 = self.__residual_block(self.conv3, maps_shape=[3, 3, 128, 128], stride=1, name='resid1')
+        self.resid2 = self.__residual_block(self.resid1, maps_shape=[3, 3, 128, 128], stride=1, name='resid2')
+        self.resid3 = self.__residual_block(self.resid2, maps_shape=[3, 3, 128, 128], stride=1, name='resid3')
+        self.resid4 = self.__residual_block(self.resid3, maps_shape=[3, 3, 128, 128], stride=1, name='resid4')
+        self.resid5 = self.__residual_block(self.resid4, maps_shape=[3, 3, 128, 128], stride=1, name='resid5')
 
-        self.conv4 = self._deconv_block(self.resid5, maps_shape=[3, 3, 64, 128], stride=2, name='conv4')
-        self.conv5 = self._deconv_block(self.conv4, maps_shape=[3, 3, 32, 64], stride=2, name='conv5')
-        self.conv6 = self._conv_block(self.conv5, maps_shape=[9, 9, 32, 3], stride=1, name='conv6', activation=None)
+        self.conv4 = self.__deconv_block(self.resid5, maps_shape=[3, 3, 64, 128], stride=2, name='conv4')
+        self.conv5 = self.__deconv_block(self.conv4, maps_shape=[3, 3, 32, 64], stride=2, name='conv5')
+        self.conv6 = self.__conv_block(self.conv5, maps_shape=[9, 9, 32, 3], stride=1, name='conv6', activation=None)
 
         self.output = tf.nn.sigmoid(self.conv6)
 
     # Returns a variable for weights wiht a specified filters shape
     @staticmethod
-    def _get_weights(shape):
+    def __get_weights(shape):
         return tf.Variable(tf.truncated_normal(shape, mean=0., stddev=.1), dtype=tf.float32)
 
     # Instance normalize inputs to reduce covariate shift and reduce dependency on input contrast to improve results
     @staticmethod
-    def _instance_normalize(inputs):
+    def __instance_normalize(inputs):
         with tf.variable_scope('instance_normalization'):
             batch, height, width, channels = [_.value for _ in inputs.get_shape()]
             mu, sigma_sq = tf.nn.moments(inputs, [1, 2], keep_dims=True)
@@ -53,12 +53,12 @@ class Generator:
 
     # Pads input of the image so the output is the same dimensions even after deconvolution
     @staticmethod
-    def _pad(inputs, size):
+    def __pad(inputs, size):
         return tf.pad(inputs, [[0, 0], [size, size], [size, size], [0, 0]], "REFLECT")
 
     # Batch normalize inputs to reduce covariate shift and improve the efficiency of training
     @staticmethod
-    def _batch_normalize(inputs, num_maps, is_training):
+    def __batch_normalize(inputs, num_maps, is_training):
         with tf.variable_scope("batch_normalization"):
             # Trainable variables for scaling and offsetting our inputs
             scale = tf.Variable(tf.ones([num_maps], dtype=tf.float32))
@@ -88,19 +88,19 @@ class Generator:
         return bn_inputs
 
     # Convolve inputs and return their batch normalized tensor
-    def _conv_block(self, inputs, maps_shape, stride, name, norm=True, padding='SAME', activation=tf.nn.relu):
+    def __conv_block(self, inputs, maps_shape, stride, name, norm=True, padding='SAME', activation=tf.nn.relu):
         with tf.variable_scope(name):
             if name == 'output':
                 activation = tf.nn.sigmoid
 
-            filters = self._get_weights(maps_shape)
+            filters = self.__get_weights(maps_shape)
             filter_maps = tf.nn.conv2d(inputs, filters, [1, stride, stride, 1], padding=padding)
             num_out_maps = maps_shape[3]
             bias = tf.Variable(tf.constant(.1, shape=[num_out_maps]))
             filter_maps = tf.nn.bias_add(filter_maps, bias)
 
             if norm:
-                filter_maps = self._instance_normalize(filter_maps)
+                filter_maps = self.__instance_normalize(filter_maps)
 
             if activation:
                 return activation(filter_maps)
@@ -108,9 +108,9 @@ class Generator:
                 return filter_maps
 
     # Upsamples inputs using transposed convolution
-    def _deconv_block(self, inputs, maps_shape, stride, name):
+    def __deconv_block(self, inputs, maps_shape, stride, name):
         with tf.variable_scope(name):
-            filters = self._get_weights(maps_shape)
+            filters = self.__get_weights(maps_shape)
 
             # Get dimensions to use for the deconvolution operator
             batch, height, width, channels = inputs.get_shape().as_list()
@@ -124,15 +124,15 @@ class Generator:
             deconv = tf.nn.conv2d_transpose(inputs, filters, output_shape=out_shape, strides=stride)
             bias = tf.Variable(tf.constant(.1, shape=[out_size]))
             deconv = tf.nn.bias_add(deconv, bias)
-            bn_maps = self._instance_normalize(deconv)
+            bn_maps = self.__instance_normalize(deconv)
 
             return tf.nn.relu(bn_maps)
 
     # The residual blocks is comprised of two convolutional layers and aims to add long short-term memory to the network
-    def _residual_block(self, inputs, maps_shape, stride, name):
+    def __residual_block(self, inputs, maps_shape, stride, name):
         with tf.variable_scope(name):
-            conv1 = self._conv_block(inputs, maps_shape, stride=stride, padding='VALID', name='c1')
-            conv2 = self._conv_block(conv1, maps_shape, stride=stride, padding='VALID', name='c2', activation=None)
+            conv1 = self.__conv_block(inputs, maps_shape, stride=stride, padding='VALID', name='c1')
+            conv2 = self.__conv_block(conv1, maps_shape, stride=stride, padding='VALID', name='c2', activation=None)
 
             batch = inputs.get_shape().as_list()[0]
             patch_height, patch_width, num_filters = conv2.get_shape().as_list()[1:]

@@ -1,5 +1,5 @@
 """
-    Author: Chris (https://github.com/machrisaa)
+    Author: Chris (https://github.com/machrisaa), modified by Mohamed K. Eid (mohamedkeid@gmail.com)
     Description: tensorflow implemention of VGG 16 and VGG 19 based on tensorflow-vgg16
 """
 
@@ -73,53 +73,53 @@ class Vgg16:
         shape[2] = num_channels
         assert bgr.get_shape().as_list()[1:] == shape
 
-        self.conv1_1 = self.conv_layer(bgr, "conv1_1")
-        self.conv1_2 = self.conv_layer(self.conv1_1, "conv1_2")
-        self.pool1 = self.avg_pool(self.conv1_2, 'pool1')
+        self.conv1_1 = self.__conv_layer(bgr, "conv1_1")
+        self.conv1_2 = self.__conv_layer(self.conv1_1, "conv1_2")
+        self.pool1 = self.__avg_pool(self.conv1_2, 'pool1')
 
-        self.conv2_1 = self.conv_layer(self.pool1, "conv2_1")
-        self.conv2_2 = self.conv_layer(self.conv2_1, "conv2_2")
-        self.pool2 = self.avg_pool(self.conv2_2, 'pool2')
+        self.conv2_1 = self.__conv_layer(self.pool1, "conv2_1")
+        self.conv2_2 = self.__conv_layer(self.conv2_1, "conv2_2")
+        self.pool2 = self.__avg_pool(self.conv2_2, 'pool2')
 
-        self.conv3_1 = self.conv_layer(self.pool2, "conv3_1")
-        self.conv3_2 = self.conv_layer(self.conv3_1, "conv3_2")
-        self.conv3_3 = self.conv_layer(self.conv3_2, "conv3_3")
-        self.pool3 = self.avg_pool(self.conv3_3, 'pool3')
+        self.conv3_1 = self.__conv_layer(self.pool2, "conv3_1")
+        self.conv3_2 = self.__conv_layer(self.conv3_1, "conv3_2")
+        self.conv3_3 = self.__conv_layer(self.conv3_2, "conv3_3")
+        self.pool3 = self.__avg_pool(self.conv3_3, 'pool3')
 
-        self.conv4_1 = self.conv_layer(self.pool3, "conv4_1")
-        self.conv4_2 = self.conv_layer(self.conv4_1, "conv4_2")
-        self.conv4_3 = self.conv_layer(self.conv4_2, "conv4_3")
-        self.pool4 = self.avg_pool(self.conv4_3, 'pool4')
+        self.conv4_1 = self.__conv_layer(self.pool3, "conv4_1")
+        self.conv4_2 = self.__conv_layer(self.conv4_1, "conv4_2")
+        self.conv4_3 = self.__conv_layer(self.conv4_2, "conv4_3")
+        self.pool4 = self.__avg_pool(self.conv4_3, 'pool4')
 
-        self.conv5_1 = self.conv_layer(self.pool4, "conv5_1")
-        self.conv5_2 = self.conv_layer(self.conv5_1, "conv5_2")
-        self.conv5_3 = self.conv_layer(self.conv5_2, "conv5_3")
+        self.conv5_1 = self.__conv_layer(self.pool4, "conv5_1")
+        self.conv5_2 = self.__conv_layer(self.conv5_1, "conv5_2")
+        self.conv5_3 = self.__conv_layer(self.conv5_2, "conv5_3")
 
         self.data_dict = None
 
-    def avg_pool(self, bottom, name):
+    def __avg_pool(self, bottom, name):
         return tf.nn.avg_pool(bottom, ksize=[1, 2, 2, 1], strides=[1, 2, 2, 1], padding='SAME', name=name)
 
-    def max_pool(self, bottom, name):
+    def __max_pool(self, bottom, name):
         return tf.nn.max_pool(bottom, ksize=[1, 2, 2, 1], strides=[1, 2, 2, 1], padding='SAME', name=name)
 
-    def conv_layer(self, bottom, name):
+    def __conv_layer(self, bottom, name):
         with tf.variable_scope(name):
-            filt = self.get_conv_filter(name)
+            filt = self.__get_conv_filter(name)
 
             conv = tf.nn.conv2d(bottom, filt, [1, 1, 1, 1], padding='SAME')
 
-            conv_biases = self.get_bias(name)
+            conv_biases = self.__get_bias(name)
             bias = tf.nn.bias_add(conv, conv_biases)
 
             relu = tf.nn.relu(bias)
             return relu
 
-    def get_conv_filter(self, name):
+    def __get_conv_filter(self, name):
         return tf.constant(self.data_dict[name][0], name="filter")
 
-    def get_bias(self, name):
+    def __get_bias(self, name):
         return tf.constant(self.data_dict[name][1], name="biases")
 
-    def get_fc_weight(self, name):
+    def __get_fc_weight(self, name):
         return tf.constant(self.data_dict[name][0], name="weights")

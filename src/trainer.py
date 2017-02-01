@@ -42,7 +42,7 @@ class Trainer:
 
     def train(self, epochs, learning_rate, content_layer, content_weight, style_layers, style_weight, tv_weight):
         # Check if there is training data available and initialize generator network
-        self._check_for_examples()
+        self.__check_for_examples()
 
         # Initialize and process images and placeholders to be used for our descriptors
         art, art_shape = helpers.load_img_to(self.paths['style_file'], height=self.train_height, width=self.train_width)
@@ -140,7 +140,7 @@ class Trainer:
         saver.save(self.session, gen_dir + name)
 
     # Checks for training data to see if it's missing or not. Asks to download if missing.
-    def _check_for_examples(self):
+    def __check_for_examples(self):
         # Asks on stdout to download MSCOCO data. Downloads if response is 'y'
         def ask_to_download():
             print("You've requested to train a new model. However, you've yet to download the training data.")
