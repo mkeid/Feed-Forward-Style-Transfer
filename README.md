@@ -22,7 +22,7 @@ For description of the generator's output, a pretrained [VGG network](https://ar
 <table style="width:100%">
 
   <tr>
-    <td></td>
+    <td><img src="lib/images/examples/results-direction.png" height="194px" width="194px"></td>
     <td><img src="lib/images/style/great-wave-of-kanagawa.jpg" height="194px" width="194px"></td> 
     <td><img src="lib/images/style/starry-night.jpg" height="194px" width="194px"></td> 
     <td><img src="lib/images/style/alley-by-the-lake.jpg" height="194px" width="194px"></td> 
