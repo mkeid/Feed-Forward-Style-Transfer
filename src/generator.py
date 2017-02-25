@@ -27,8 +27,8 @@ class Generator:
         self.resid4 = self.__residual_block(self.resid3, maps_shape=[3, 3, 128, 128], stride=1, name='resid4')
         self.resid5 = self.__residual_block(self.resid4, maps_shape=[3, 3, 128, 128], stride=1, name='resid5')
 
-        self.conv4 = self.__deconv_block(self.resid5, maps_shape=[3, 3, 64, 128], stride=2, name='conv4')
-        self.conv5 = self.__deconv_block(self.conv4, maps_shape=[3, 3, 32, 64], stride=2, name='conv5')
+        self.conv4 = self.__upsample_block(self.resid5, maps_shape=[3, 3, 64, 128], stride=2, name='conv4')
+        self.conv5 = self.__upsample_block(self.conv4, maps_shape=[3, 3, 32, 64], stride=2, name='conv5')
         self.conv6 = self.__conv_block(self.conv5, maps_shape=[9, 9, 32, 3], stride=1, name='conv6', activation=None)
 
         self.output = tf.nn.sigmoid(self.conv6)
@@ -51,7 +51,7 @@ class Generator:
 
             return scale * normalized + shift
 
-    # Pads input of the image so the output is the same dimensions even after deconvolution
+    # Pads input of the image so the output is the same dimensions even after upsampleolution
     @staticmethod
     def __pad(inputs, size):
         return tf.pad(inputs, [[0, 0], [size, size], [size, size], [0, 0]], "REFLECT")
@@ -108,11 +108,11 @@ class Generator:
                 return filter_maps
 
     # Upsamples inputs using transposed convolution
-    def __deconv_block(self, inputs, maps_shape, stride, name):
+    def __upsample_block(self, inputs, maps_shape, stride, name):
         with tf.variable_scope(name):
             filters = self.__get_weights(maps_shape)
 
-            # Get dimensions to use for the deconvolution operator
+            # Get dimensions to use for the upsample operator
             batch, height, width, channels = inputs.get_shape().as_list()
             out_height = height * stride
             out_width = width * stride
@@ -120,11 +120,11 @@ class Generator:
             out_shape = tf.stack([batch, out_height, out_width, out_size])
             stride = [1, stride, stride, 1]
 
-            # Deconvolve and normalize the biased outputs
-            deconv = tf.nn.conv2d_transpose(inputs, filters, output_shape=out_shape, strides=stride)
+            # Upsample and normalize the biased outputs
+            upsample = tf.nn.conv2d_transpose(inputs, filters, output_shape=out_shape, strides=stride)
             bias = tf.Variable(tf.constant(.1, shape=[out_size]))
-            deconv = tf.nn.bias_add(deconv, bias)
-            bn_maps = self.__instance_normalize(deconv)
+            upsample = tf.nn.bias_add(upsample, bias)
+            bn_maps = self.__instance_normalize(upsample)
 
             return tf.nn.relu(bn_maps)
 

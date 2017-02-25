@@ -54,7 +54,7 @@ For description of the generator's output, a pretrained [VGG network](https://ar
 ## Prerequisites
 
 * [Python 3.5](https://www.python.org/downloads/release/python-350/)
-* [TensorFlow](https://www.tensorflow.org/) (>= r0.12)
+* [TensorFlow](https://www.tensorflow.org/) (>= r1.0)
 * [scikit-image](http://scikit-image.org/docs/dev/api/skimage.html)
 * [NumPy](http://www.numpy.org/)
 
