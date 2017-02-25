@@ -117,7 +117,7 @@ class Generator:
             out_height = height * stride
             out_width = width * stride
             out_size = maps_shape[2]
-            out_shape = tf.pack([batch, out_height, out_width, out_size])
+            out_shape = tf.stack([batch, out_height, out_width, out_size])
             stride = [1, stride, stride, 1]
 
             # Deconvolve and normalize the biased outputs
@@ -136,6 +136,6 @@ class Generator:
 
             batch = inputs.get_shape().as_list()[0]
             patch_height, patch_width, num_filters = conv2.get_shape().as_list()[1:]
-            out_shape = tf.pack([batch, patch_height, patch_width, num_filters])
+            out_shape = tf.stack([batch, patch_height, patch_width, num_filters])
             cropped_inputs = tf.slice(inputs, [0, 1, 1, 0], out_shape)
             return conv2 + cropped_inputs

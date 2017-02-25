@@ -77,13 +77,13 @@ with tf.Session() as sess:
     # Load and initialize the image to be stlylized
     input_img, _ = helpers.load_img(INPUT_PATH)
     input_img = tf.convert_to_tensor(input_img, dtype=tf.float32)
-    input_img = tf.expand_dims(input_img, dim=0)
+    input_img = tf.expand_dims(input_img, axis=0)
 
     # Initialize new generative net
     with tf.variable_scope('generator'):
         gen = generator.Generator()
         gen.build(tf.convert_to_tensor(input_img))
-        sess.run(tf.initialize_all_variables())
+        sess.run(tf.global_variables_initializer())
 
     # Restore previously trained model
     ckpt_dir = TRAINED_MODELS_PATH + STYLE

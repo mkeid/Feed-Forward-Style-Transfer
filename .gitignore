@@ -8,4 +8,5 @@ __pycache__/
 *.idea
 .DS_Store
 output/
+lib/train2014
 *.zip

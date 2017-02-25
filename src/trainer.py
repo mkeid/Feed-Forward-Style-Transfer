@@ -21,7 +21,7 @@ class Trainer:
             'out_dir': self.current_path + '/../output/',
             'style_file': train_path,
             'trained_generators_dir': self.current_path + '/../lib/generators/',
-            'training_dir': self.current_path + '/../lib/images/train2014/',
+            'training_dir': self.current_path + '/../lib/train2014/',
             'training_url': 'http://msvocds.blob.core.windows.net/coco2014/train2014.zip'
         }
         self.session = session
@@ -87,7 +87,7 @@ class Trainer:
         # Populate the training data
         print("Initializing session and loading training images..")
         example = self.__next_example(height=art_shape[1], width=art_shape[2])
-        self.session.run(tf.initialize_all_variables())
+        self.session.run(tf.global_variables_initializer())
 
         # Initialize threads and begin training
         print("Begining training..")

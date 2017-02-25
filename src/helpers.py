@@ -41,7 +41,7 @@ def get_style_loss(variable_model, style_model, layers):
         style_layer_losses = [get_style_loss_for_layer(variable_model, style_model, l) for l in layers.keys()]
         style_layer_losses = tf.convert_to_tensor(style_layer_losses)
         style_weights = tf.constant(list(layers.values()))
-        weighted_layer_losses = tf.mul(style_weights, style_layer_losses)
+        weighted_layer_losses = tf.multiply(style_weights, style_layer_losses)
         return tf.reduce_sum(weighted_layer_losses)
 
 
