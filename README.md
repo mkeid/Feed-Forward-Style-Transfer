@@ -11,7 +11,7 @@ Unlike the non-feed-forward implementation, this implementation is deterministic
 
 #### Implementation Architecture
 
-A generative convolutional neural network was used with downsampling layers followed by [residual blocks](https://arxiv.org/abs/1512.03385) then upsampling by [deconvolutional](https://en.wikipedia.org/wiki/Deconvolution) layers. Normalization of inputs is performed to reducing internal covariate shift.
+A generative convolutional neural network was used with downsampling layers followed by [residual blocks](https://arxiv.org/abs/1512.03385). This is followed by upsampling layers accomplished using [fractionally strided convolutions](https://arxiv.org/pdf/1605.06211v1.pdf), which has been incorrectly termed "deconvolution" in some publications. Normalization of inputs is performed to reducing internal covariate shift.
 
 For description of the generator's output, a pretrained [VGG network](https://arxiv.org/pdf/1409.1556.pdf) was used. It is provided [here](https://github.com/machrisaa/tensorflow-vgg) by [machrisaa](https://github.com/machrisaa) on GitHub. The VGG implementation was customized to accomodate the implementation requirements requirements and is of the 16-layer variety.
 
