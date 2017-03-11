@@ -10,8 +10,10 @@
 
 import argparse
 import generator
+import logging
 import os
 import tensorflow as tf
+import time
 import trainer
 
 # Model Hyper Params
@@ -20,8 +22,6 @@ STYLE_LAYERS = {'conv1_2': .25, 'conv2_2': .25, 'conv3_3': .25, 'conv4_3': .25}
 EPOCHS = 250000
 LEARNING_RATE = .0001
 TRAINING_DIMS = {'height': 256, 'width': 256}
-PRINT_TRAINING_STATUS = True
-PRINT_EVERY_N = 100
 
 # Loss term weights
 CONTENT_WEIGHT = 1.
@@ -33,6 +33,18 @@ DIR_PATH = os.path.dirname(os.path.realpath(__file__))
 DATA_DIR_PATH = DIR_PATH + '/../lib/images/train2014/'
 TRAINED_MODELS_PATH = DIR_PATH + '/../lib/generators/'
 TRAIN_PATH = None
+
+# Logging params
+PRINT_TRAINING_STATUS = True
+PRINT_EVERY_N = 100
+
+# Logging config
+log_dir = DIR_PATH + '/../log/'
+if not os.path.isdir(log_dir):
+    os.makedirs(log_dir)
+    print('Directory "%s" was created for logging.' % log_dir)
+log_path = ''.join([log_dir, str(time.time()), '.log'])
+logging.basicConfig(filename=log_path, level=logging.INFO)
 
 
 # Parse arguments and assign them to their respective global variables

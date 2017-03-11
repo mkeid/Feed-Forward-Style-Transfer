@@ -5,6 +5,7 @@
 
 import custom_vgg16 as vgg16
 import helpers
+import logging
 import numpy as np
 import os
 import tensorflow as tf
@@ -85,12 +86,12 @@ class Trainer:
             update_weights = optimizer.apply_gradients(grads)
 
         # Populate the training data
-        print("Initializing session and loading training images..")
+        logging.info("Initializing session and loading training images..")
         example = self.__next_example(height=art_shape[1], width=art_shape[2])
         self.session.run(tf.global_variables_initializer())
 
         # Initialize threads and begin training
-        print("Begining training..")
+        logging.info("Begining training..")
         coord = tf.train.Coordinator()
         threads = tf.train.start_queue_runners(coord=coord)
         start_time = time.time()
@@ -107,11 +108,11 @@ class Trainer:
             _, loss = self.session.run([update_weights, total_loss], feed_dict=feed_dict)
 
             if self.print_training_status and i % self.train_n == 0:
-                print("Epoch %06d | Loss %.06f" % (i, loss))
+                logging.info("Epoch %06d | Loss %.06f" % (i, loss))
 
         # Alert that training has been completed and print the run time
         elapsed = time.time() - start_time
-        print("Training complete. The session took %.2f seconds to complete." % elapsed)
+        logging.info("Training complete. The session took %.2f seconds to complete." % elapsed)
         coord.request_stop()
         coord.join(threads)
 
@@ -121,7 +122,7 @@ class Trainer:
     def __check_for_examples(self):
         # Asks on stdout to download MSCOCO data. Downloads if response is 'y'
         def ask_to_download():
-            print("You've requested to train a new model. However, you've yet to download the training data.")
+            logging.info("You've requested to train a new model. However, you've yet to download the training data.")
 
             answer = 0
             while answer is not 'y' and answer is not 'N':
@@ -129,7 +130,7 @@ class Trainer:
 
             # Download weights if yes, else exit the program
             if answer == 'y':
-                print("Downloading from %s. Please be patient..." % self.paths['training_url'])
+                logging.info("Downloading from %s. Please be patient..." % self.paths['training_url'])
 
                 zip_save_path = self.current_path + '/../lib/images/train2014.zip'
                 urllib.request.urlretrieve(self.paths['training_url'], zip_save_path)
@@ -147,7 +148,7 @@ class Trainer:
                 if not os.path.isdir(self.paths['training_dir']):
                     os.makedirs(self.paths['training_dir'])
 
-                print("Unzipping file..")
+                logging.info("Unzipping file..")
                 zip_ref = zipfile.ZipFile(path, 'r')
                 zip_ref.extractall(self.current_path + '/../lib/')
                 zip_ref.close()
@@ -183,7 +184,7 @@ class Trainer:
 
     # Saves the weights with the name of the references style so that the net may stylize future images
     def __save_model(self, variables):
-        print("Proceeding to save weights..")
+        logging.info("Proceeding to save weights..")
         name = os.path.basename(self.paths['style_file']).replace('.jpg', '')
         gen_dir = self.paths['trained_generators_dir'] + name + '/'
         if not os.path.isdir(gen_dir):
@@ -192,6 +193,6 @@ class Trainer:
         saver.save(self.session, gen_dir + name)
 
     def __exit(self, rc=0, message="Exiting the program.."):
-        print(message)
+        logging.info(message)
         self.session.close()
         exit(rc)
