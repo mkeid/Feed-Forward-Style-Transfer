@@ -29,19 +29,10 @@ class Vgg16:
                 vgg16_npy_path = path
             else:
                 print("VGG16 weights were not found in the project directory")
-
-                answer = 0
-                while answer is not 'y' and answer is not 'N':
-                    answer = input("Would you like to download the 528 MB file? [y/N] ").replace(" ", "")
-
-                # Download weights if yes, else exit the program
-                if answer == 'y':
-                    print("Downloading. Please be patient...")
-                    urllib.request.urlretrieve(weights_url, weights_name)
-                    vgg16_npy_path = path
-                elif answer == 'N':
-                    print("Exiting the program..")
-                    exit(0)
+                print("Please download the numpy weights file and place it in the 'lib/descriptor' directory")
+                print("Download link: https://mega.nz/#!YU1FWJrA!O1ywiCS2IiOlUCtCpI6HTJOMrneN-Qdv3ywQP5poecM")
+                print("Exiting the program..")
+                exit(1)
 
         if data is None:
             data = np.load(vgg16_npy_path, encoding='latin1')
