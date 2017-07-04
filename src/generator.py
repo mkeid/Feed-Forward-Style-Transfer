@@ -18,8 +18,8 @@ class Generator:
         self.padded = self.__pad(img, 40)
 
         self.conv1 = self.__conv_block(self.padded, maps_shape=[9, 9, 3, 32], stride=1, name='conv1')
-        self.conv2 = self.__conv_block(self.conv1, maps_shape=[3, 3, 32, 64], stride=2, name='conv2')
-        self.conv3 = self.__conv_block(self.conv2, maps_shape=[3, 3, 64, 128], stride=2, name='conv3')
+        self.conv2 = self.__conv_block(self.conv1, maps_shape=[2, 2, 32, 64], stride=2, name='conv2')
+        self.conv3 = self.__conv_block(self.conv2, maps_shape=[2, 2, 64, 128], stride=2, name='conv3')
 
         self.resid1 = self.__residual_block(self.conv3, maps_shape=[3, 3, 128, 128], stride=1, name='resid1')
         self.resid2 = self.__residual_block(self.resid1, maps_shape=[3, 3, 128, 128], stride=1, name='resid2')
@@ -27,8 +27,8 @@ class Generator:
         self.resid4 = self.__residual_block(self.resid3, maps_shape=[3, 3, 128, 128], stride=1, name='resid4')
         self.resid5 = self.__residual_block(self.resid4, maps_shape=[3, 3, 128, 128], stride=1, name='resid5')
 
-        self.conv4 = self.__upsample_block(self.resid5, maps_shape=[3, 3, 64, 128], stride=2, name='conv4')
-        self.conv5 = self.__upsample_block(self.conv4, maps_shape=[3, 3, 32, 64], stride=2, name='conv5')
+        self.conv4 = self.__upsample_block(self.resid5, maps_shape=[2, 2, 64, 128], stride=2, name='conv4')
+        self.conv5 = self.__upsample_block(self.conv4, maps_shape=[2, 2, 32, 64], stride=2, name='conv5')
         self.conv6 = self.__conv_block(self.conv5, maps_shape=[9, 9, 32, 3], stride=1, name='conv6', activation=None)
 
         self.output = tf.nn.sigmoid(self.conv6)

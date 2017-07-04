@@ -3,13 +3,20 @@
     Description: helper class containing various methods with their functions ranging from image retrieval to auxiliary math helpers
 """
 
+import logging
 import numpy as np
 import tensorflow as tf
 from functools import reduce
 import skimage
 import skimage.io
 import skimage.transform
+import sys
 from scipy.misc import toimage
+
+
+# Configure the python logger
+def config_logging():
+    logging.basicConfig(level=logging.INFO, stream=sys.stdout)
 
 
 # Compute the content loss given a variable image (x) and a content image (c)

@@ -22,7 +22,7 @@ class Trainer:
             'out_dir': self.current_path + '/../output/',
             'style_file': train_path,
             'trained_generators_dir': self.current_path + '/../lib/generators/',
-            'training_dir': self.current_path + '/../lib/train2014/',
+            'training_dir': self.current_path + '/../lib/images/train2014/',
             'training_url': 'http://msvocds.blob.core.windows.net/coco2014/train2014.zip'
         }
         self.session = session
@@ -31,7 +31,7 @@ class Trainer:
         self.print_training_status = print_training_status
         self.train_n = print_every_n
 
-    def train(self, epochs, learning_rate, content_layer, content_weight, style_layers, style_weight, tv_weight):
+    def train(self, epochs, learning_rate, content_layer, content_weight, style_layers, style_weight, tv_weight, retrain=False):
         # Check if there is training data available and initialize generator network
         self.__check_for_examples()
 
@@ -58,6 +58,13 @@ class Trainer:
         with tf.name_scope('vgg_variable'):
             variable_model = vgg16.Vgg16()
             variable_model.build(variable_img, shape=art_shape[1:])
+        
+        # Continue from a pretrained model
+        if retrain:
+            print("tryue")
+            name = os.path.basename(self.paths['style_file']).replace('.jpg', '')
+            saver = tf.train.Saver()
+            saver.restore(self.session, "%s/%s/%s" % (self.paths['trained_generators_dir'], name, name))
 
         # Loss ops
         with tf.name_scope('loss'):
@@ -88,8 +95,9 @@ class Trainer:
         # Populate the training data
         logging.info("Initializing session and loading training images..")
         example = self.__next_example(height=art_shape[1], width=art_shape[2])
+        self.session.run(tf.local_variables_initializer())
         self.session.run(tf.global_variables_initializer())
-
+        
         # Initialize threads and begin training
         logging.info("Begining training..")
         coord = tf.train.Coordinator()
@@ -109,6 +117,13 @@ class Trainer:
 
             if self.print_training_status and i % self.train_n == 0:
                 logging.info("Epoch %06d | Loss %.06f" % (i, loss))
+                in_path = self.current_path + '/../lib/images/content/nyc.jpg'
+                input_img, input_shape = helpers.load_img_to(in_path, height=self.train_height, width=self.train_width)
+                input_img = input_img.reshape([1] + input_shape).astype(np.float32)
+                path_out = self.current_path + '/../output/' + str(start_time) + '.jpg'
+                img = self.session.run(variable_img, feed_dict={variable_placeholder: input_img})
+                helpers.render(img, path_out=path_out)
+
 
         # Alert that training has been completed and print the run time
         elapsed = time.time() - start_time
@@ -170,7 +185,6 @@ class Trainer:
             if num_training_files <= 1:
                 ask_to_download()
 
-                # Retrieves next example image from queue
 
     # Returns a new training example
     def __next_example(self, height, width):

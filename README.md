@@ -25,28 +25,28 @@ For description of the generator's output, a pretrained [VGG network](https://ar
     <td><img src="lib/images/examples/results-direction.png" height="194px" width="194px"></td>
     <td><img src="lib/images/style/great-wave-of-kanagawa.jpg" height="194px" width="194px"></td> 
     <td><img src="lib/images/style/starry-night.jpg" height="194px" width="194px"></td> 
-    <td><img src="lib/images/style/alley-by-the-lake.jpg" height="194px" width="194px"></td> 
+    <td><img src="lib/images/style/scream.jpg" height="194px" width="194px"></td> 
   </tr>
   
   <tr>
     <td><img src="lib/images/content/nyc.jpg" height="194px" width="194px"></td>
     <td><img src="lib/images/examples/nyc-wave.jpg" height="194px" width="194px"></td> 
     <td><img src="lib/images/examples/nyc-night.jpg" height="194px" width="194px"></td> 
-    <td><img src="lib/images/examples/nyc-alley.jpg" height="194px" width="194px"></td> 
+    <td><img src="lib/images/examples/nyc-scream.jpg" height="194px" width="194px"></td> 
   </tr>
   
   <tr>
     <td><img src="lib/images/content/beach.jpg" height="194px" width="194px"></td>
     <td><img src="lib/images/examples/beach-wave.jpg" height="194px" width="194px"></td> 
     <td><img src="lib/images/examples/beach-night.jpg" height="194px" width="194px"></td> 
-    <td><img src="lib/images/examples/beach-alley.jpg" height="194px" width="194px"></td> 
+    <td><img src="lib/images/examples/beach-scream.jpg" height="194px" width="194px"></td> 
   </tr>
   
   <tr>
     <td><img src="lib/images/content/drawing.jpg" height="194px" width="194px"></td>
     <td><img src="lib/images/examples/drawing-wave.jpg" height="194px" width="194px"></td> 
     <td><img src="lib/images/examples/drawing-night.jpg" height="194px" width="194px"></td> 
-    <td><img src="lib/images/examples/drawing-alley.jpg" height="194px" width="194px"></td> 
+    <td><img src="lib/images/examples/drawing-scream.jpg" height="194px" width="194px"></td> 
   </tr>
   
 </table>
@@ -54,7 +54,7 @@ For description of the generator's output, a pretrained [VGG network](https://ar
 ## Prerequisites
 
 * [Python 3.5](https://www.python.org/downloads/release/python-350/)
-* [TensorFlow](https://www.tensorflow.org/) (>= r1.0)
+* [TensorFlow](https://www.tensorflow.org/) (>= r1.2)
 * [scikit-image](http://scikit-image.org/docs/dev/api/skimage.html)
 * [NumPy](http://www.numpy.org/)
 
