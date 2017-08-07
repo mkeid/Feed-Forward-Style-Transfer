@@ -12,11 +12,13 @@
 """
 
 import argparse
+import os
+import time
+
+import tensorflow as tf
+
 import generator
 import helpers
-import os
-import tensorflow as tf
-import time
 
 # Loss term weights
 CONTENT_WEIGHT = 1.

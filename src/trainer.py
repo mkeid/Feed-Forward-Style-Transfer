@@ -3,15 +3,17 @@
     Description: trainer class for training a new generative model
 """
 
-import custom_vgg16 as vgg16
-import helpers
 import logging
-import numpy as np
 import os
-import tensorflow as tf
 import time
 import urllib
 import zipfile
+
+import numpy as np
+import tensorflow as tf
+
+import custom_vgg16 as vgg16
+import helpers
 
 
 class Trainer:
@@ -184,7 +186,6 @@ class Trainer:
             num_training_files = len(training_files)
             if num_training_files <= 1:
                 ask_to_download()
-
 
     # Returns a new training example
     def __next_example(self, height, width):

@@ -9,12 +9,12 @@
 """
 
 import argparse
+import os
+
+import tensorflow as tf
+
 import generator
 import helpers
-import logging
-import os
-import tensorflow as tf
-import time
 import trainer
 
 # Model Hyper Params
